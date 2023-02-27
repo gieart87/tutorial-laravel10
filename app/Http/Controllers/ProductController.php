@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+
+use App\Models\Product;
 
 class ProductController extends Controller
 {
@@ -13,7 +17,9 @@ class ProductController extends Controller
      */
     public function index(): Response
     {
-        dd('index');
+        $products = Product::all();
+
+        return response(view('products.index', ['products' => $products]));
     }
 
     /**
@@ -21,15 +27,17 @@ class ProductController extends Controller
      */
     public function create(): Response
     {
-        dd('create');
+        return response(view('products.create'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreProductRequest $request): RedirectResponse
     {
-        dd('store');
+        if (Product::create($request->validated())) {
+            return redirect(route('products.index'))->with('success', 'Added!');
+        }
     }
 
     /**
@@ -45,15 +53,21 @@ class ProductController extends Controller
      */
     public function edit(string $id): Response
     {
-        dd('edit');
+        $product = Product::findOrFail($id);
+
+        return response(view('products.edit', ['product' => $product]));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(UpdateProductRequest $request, string $id): RedirectResponse
     {
-        dd('update');
+        $product = Product::findOrFail($id);
+
+        if ($product->update($request->validated())) {
+            return redirect(route('products.index'))->with('success', 'Updated!'); 
+        }
     }
 
     /**
@@ -61,6 +75,12 @@ class ProductController extends Controller
      */
     public function destroy(string $id): RedirectResponse
     {
-        dd('store');
+        $product = Product::findOrFail($id);
+
+        if ($product->delete()) {
+            return redirect(route('products.index'))->with('success', 'Deleted!');
+        }
+
+        return redirect(route('products.index'))->with('error', 'Sorry, unable to delete this!');
     }
 }
