@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\StoreProductRequest;
 
 class ProductController extends Controller
 {
@@ -21,15 +23,30 @@ class ProductController extends Controller
      */
     public function create(): Response
     {
-        dd('create');
+        return response(view('products.create'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreProductRequest $request): RedirectResponse
     {
-        dd('store');
+        $validator = Validator::make($request->all(), [
+            'sku' => ['required', 'unique:products', 'max:100'],
+            'name' => ['required', 'max:100'],
+            'price' => ['required', 'numeric', 'min:1'],
+            'stock' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        if ($validator->fails()) {
+            return redirect('products/create')
+                        ->withErrors($validator)
+                        ->withInput();
+        }
+ 
+        // Retrieve the validated input...
+        $validated = $validator->validated();
+        dd($validated);
     }
 
     /**
